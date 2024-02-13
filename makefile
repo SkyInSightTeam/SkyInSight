@@ -1,13 +1,23 @@
-OS := $(shell uname)
-
-ifeq ($(OS),Darwin)  # macOS
-	PRINT=@printf
-	COMPILER=clang++
-else ifeq ($(OS),Linux)
-	PRINT=@printf
-	COMPILER=clang++
-else ifeq ($(OS),Windows)
+ifeq ($(OS),Windows_NT)
 	PRINT=@echo
+	COMPILER=g++
+else
+	UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S),Darwin)
+		PRINT=@printf
+		COMPILER=clang++
+	endif
+	ifeq ($(UNAME_S),Linux)
+		PRINT=@printf
+		COMPILER=clang++
+	endif
+endif
+
+ifeq ($(PRINT),)
+	PRINT=@echo
+endif
+
+ifeq ($(COMPILER),)
 	COMPILER=g++
 endif
 
