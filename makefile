@@ -1,8 +1,10 @@
 ifeq ($(OS),Windows_NT)
-	PRINT=@echo
+	PRINT=@echo -e
 	COMPILER=g++
+    COLOR=\033
 else
 	UNAME_S := $(shell uname -s)
+    COLOR=\e
 	ifeq ($(UNAME_S),Darwin)
 		PRINT=@printf
 		COMPILER=clang++
@@ -24,18 +26,18 @@ endif
 all: compiler
 
 clean:
-	$(PRINT) "\n\e[32m--------| \e[1;32mCLEANING\e[0m\e[32m |--------\e[0m\n\n"
+	$(PRINT) "\n$(COLOR)[32m--------| $(COLOR)[1;32mCLEANING$(COLOR)[0m$(COLOR)[32m |--------$(COLOR)[0m\n\n"
 	rm -f out.bin *.gch SkyInsight
-	$(PRINT) "\e[32m\tDONE\e[0m\n"
+	$(PRINT) "$(COLOR)[32m\tDONE$(COLOR)[0m\n"
 
 compiler:
-	$(PRINT) "\e[32m--------| \e[1;32mCompilation of all your .cpp\e[0m\e[32m |--------\e[0m\n\n"
+	$(PRINT) "$(COLOR)[32m--------| $(COLOR)[1;32mCompilation of all your .cpp$(COLOR)[0m$(COLOR)[32m |--------$(COLOR)[0m\n\n"
 	$(COMPILER) -std=c++17 -o SkyInsight main.cpp
-	$(PRINT) "\e[32m\tDONE\e[0m\n"
+	$(PRINT) "$(COLOR)[32m\tDONE$(COLOR)[0m\n"
 
 test: compiler
-	$(PRINT) "\e[32m--------| \e[1mTest of the binary file\e[0m\e[32m |--------\e[0m\n\n"
+	$(PRINT) "--------| Test of the binary file |--------\n\n"
 	./SkyInsight
-	$(PRINT) "\e[32m\tDONE\e[0m\n"
+	$(PRINT) "\tDONE$(COLOR)[0m\n"
 
 .PHONY: all clean test
