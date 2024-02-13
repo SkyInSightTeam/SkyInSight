@@ -26,4 +26,3 @@ test: compiler
 	@printf "\e[32m\tDONE\e[0m\n"
 
 .PHONY: all clean test
-
