@@ -11,7 +11,7 @@ else
 	endif
 	ifeq ($(UNAME_S),Linux)
 		PRINT=@printf
-		COMPILER=clang++
+		COMPILER=g++
 	endif
 endif
 
