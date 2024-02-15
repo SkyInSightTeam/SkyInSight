@@ -32,7 +32,7 @@ void print_usage()
               << "          -h | --help                     Help" << std::endl
               << "          -v | --version                  Version" << std::endl
               << "          -c | --city <name>              Name of the city" << std::endl
-              << "          -d | --date <date>        Day that you want (Today by default)" << std::endl
+              << "          -d | --date <date>              Day that you want (Today by default)" << std::endl
               << "          -i | --interval <date> <date>   Days that you want (Today by default)" << std::endl
               << std::endl
               << std::endl
