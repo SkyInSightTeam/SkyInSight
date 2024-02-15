@@ -10,7 +10,7 @@ std::string PROGNAME = "SkyInSight";
 std::string FILE_NAME = __FILE__;
 std::string RELEASE = "Revision 0.1 | Last update 6 Feb 2024";
 std::string AUTHOR = "\033[1mAubertin Emmanuel\033[0m";
-std::string COPYRIGHT = "(c) 2024 " + AUTHOR + " from https://athomisos.fr";
+std::string COPYRIGHT = "(c) 2024 " + AUTHOR + " from https://github.com/SkyInSightTeam";
 bool VERBOSE = false;
 
 auto print_release = []
@@ -27,16 +27,22 @@ auto failure = [](std::string_view message)
 void print_usage()
 {
     std::cout << std::endl
-              << PROGNAME << " by " << PROGNAME << std::endl
-              << "\033[1mUsage: \033[0m" << FILE_NAME << " | [-h | --help] | [-v | --version] " << std::endl
+              << PROGNAME << " by " << AUTHOR << std::endl
+              << "\033[1mUsage: \033[0m" << PROGNAME << " | [-h | --help] | [-v | --version] " << std::endl
               << "          -h | --help                     Help" << std::endl
               << "          -v | --version                  Version" << std::endl
               << "          -c | --city <name>              Name of the city" << std::endl
               << "          -d | --date <date>              Day that you want (Today by default)" << std::endl
               << "          -i | --interval <date> <date>   Days that you want (Today by default)" << std::endl
+              << "          -f | --filter <filter-list>     See filter usage for filter-list" << std::endl
               << std::endl
               << std::endl
-              << "Date format: DD/MM/YYYY" << std::endl;
+              << "Date format: DD/MM/YYYY" << std::endl
+              << "Filter usage:" << std::endl
+              << "          ./SkyInsight --filter twp" << std::endl
+              << "Filter avaible :" << std::endl
+              << "          t       For temperature" << std::endl
+              << "          w       For global weather (clear, rain...)" << std::endl;
 }
 
 auto print_help = []()
@@ -76,7 +82,7 @@ int main(int argc, char **argv)
               << std::endl;
 
     std::string city = "";
-    Date *start = nullptr;
+    Date *start = new Date();
     Date *end = nullptr;
 
     if (argc < 1) // number of arg minimum
