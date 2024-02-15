@@ -122,6 +122,16 @@ int main(int argc, char **argv)
             end = new Date(split(argv[++i], "/"));
             continue;
         }
+        else if (!strcmp(argv[i], "-f") || !strcmp(argv[i], "--filter"))
+        {
+            std::string strListFilter = argv[++i];
+            for (char letter : strListFilter)
+            {
+                // TODO: Make filter when API will be advance
+                std::cout << letter << std::endl;
+            }
+            continue;
+        }
         else
         { // ALL OTHER ARGUMENT
             print_usage();
