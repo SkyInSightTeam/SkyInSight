@@ -1,6 +1,7 @@
 #include "Date.hpp"
 #include <string.h>
 #include <stdexcept>
+#include <vector>
 
 /**
  * @brief Construct a new Date:: Date object with JC

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <stdlib.h>
 #include "src/Date/Date.hpp"
+#include <vector>
 
 std::string PROGNAME = "SkyInSight";
 std::string FILE_NAME = __FILE__;
