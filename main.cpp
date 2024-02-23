@@ -3,6 +3,7 @@
 #include <string.h>
 #include <fstream>
 #include <stdlib.h>
+#include "src/WeatherApiCaller/WeatherApiCaller.h"
 #include "src/Date/Date.hpp"
 #include <vector>
 
@@ -70,6 +71,10 @@ std::vector<std::string> split(std::string s, std::string delimiter)
 
 int main(int argc, char **argv)
 {
+    WeatherApiCaller weatherApiCaller("da044ffc858543249a5133512242302");
+    std::cout << weatherApiCaller.getApiKey() << std::endl;
+    std::cout << weatherApiCaller.getCityInfo("Montfavet") << std::endl;
+
     std::cout << "🤗  | Welcome in \033[1m" << PROGNAME << "\033[0m | 🤗" << std::endl;
     print_release();
     std::cout << std::endl

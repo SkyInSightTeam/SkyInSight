@@ -32,7 +32,7 @@ clean:
 
 compiler:
 	$(PRINT) "$(COLOR)[32m--------| $(COLOR)[1;32mCompilation of all your .cpp$(COLOR)[0m$(COLOR)[32m |--------$(COLOR)[0m\n\n"
-	$(COMPILER) -std=c++17 -o SkyInsight main.cpp src/Date/Date.cpp
+	$(COMPILER) -std=c++17 -o SkyInsight main.cpp src/Date/Date.cpp src/WeatherApiCaller/*.cpp -Iinclude/ -lcurlpp -lcurl
 	$(PRINT) "$(COLOR)[32m\tDONE$(COLOR)[0m\n"
 
 test: compiler
