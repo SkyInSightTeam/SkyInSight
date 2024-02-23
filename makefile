@@ -11,7 +11,7 @@ else
 	endif
 	ifeq ($(UNAME_S),Linux)
 		PRINT=@printf
-		COMPILER=clang++
+		COMPILER=g++
 	endif
 endif
 
@@ -26,17 +26,17 @@ endif
 all: compiler
 
 clean:
-	$(PRINT) "\n$(COLOR)[32m--------| $(COLOR)[1;32mCLEANING$(COLOR)[0m$(COLOR)[32m |--------$(COLOR)[0m\n\n"
+	$(PRINT) "\n$(COLOR)--------| $(COLOR)[1;32mCLEANING$(COLOR)[0m$(COLOR)[32m |--------$(COLOR)[0m\n\n"
 	rm -f out.bin *.gch SkyInsight
 	$(PRINT) "$(COLOR)[32m\tDONE$(COLOR)[0m\n"
 
 compiler:
 	$(PRINT) "$(COLOR)[32m--------| $(COLOR)[1;32mCompilation of all your .cpp$(COLOR)[0m$(COLOR)[32m |--------$(COLOR)[0m\n\n"
-	$(COMPILER) -std=c++17 -o SkyInsight main.cpp src/WeatherApiCaller/*.cpp -Iinclude/ -lcurlpp -lcurl
+	$(COMPILER) -std=c++17 -o SkyInsight main.cpp src/Date/Date.cpp src/WeatherApiCaller/*.cpp -Iinclude/ -lcurlpp -lcurl
 	$(PRINT) "$(COLOR)[32m\tDONE$(COLOR)[0m\n"
 
 test: compiler
-	$(PRINT) "--------| Test of the binary file |--------\n\n"
+	$(PRINT) "$(COLOR)[32m--------| Test of the binary file |--------$(COLOR)[0m\n\n"
 	./SkyInsight
 	$(PRINT) "\tDONE$(COLOR)[0m\n"
 
