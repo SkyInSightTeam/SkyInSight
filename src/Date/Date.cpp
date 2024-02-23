@@ -2,16 +2,20 @@
 #include <string.h>
 #include <stdexcept>
 #include <vector>
+#include <ctime>
 
 /**
- * @brief Construct a new Date:: Date object with JC
+ * @brief Construct a new Date:: Date object with current day
  *
  */
 Date::Date()
 {
-    this->day = 0;
-    this->month = 0;
-    this->year = 0;
+    time_t now = time(0);
+    struct tm tstruct = *localtime(&now);
+
+    this->day = tstruct.tm_mday;
+    this->month = tstruct.tm_mon + 1;
+    this->year = tstruct.tm_year + 1900;
 }
 
 Date::Date(int day, int month, int year)

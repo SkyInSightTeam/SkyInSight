@@ -6,12 +6,16 @@
 #include "src/WeatherApiCaller/WeatherApiCaller.h"
 #include "src/Date/Date.hpp"
 #include <vector>
+#include <ftxui/dom/elements.hpp>
+#include <ftxui/screen/screen.hpp>
+
+using namespace ftxui;
 
 std::string PROGNAME = "SkyInSight";
 std::string FILE_NAME = __FILE__;
 std::string RELEASE = "Revision 0.1 | Last update 6 Feb 2024";
 std::string AUTHOR = "\033[1mAubertin Emmanuel\033[0m";
-std::string COPYRIGHT = "(c) 2024 " + AUTHOR + " from https://athomisos.fr";
+std::string COPYRIGHT = "(c) 2024 " + AUTHOR + " from https://github.com/SkyInSightTeam";
 bool VERBOSE = false;
 
 auto print_release = []
@@ -28,16 +32,22 @@ auto failure = [](std::string_view message)
 void print_usage()
 {
     std::cout << std::endl
-              << PROGNAME << " by " << PROGNAME << std::endl
-              << "\033[1mUsage: \033[0m" << FILE_NAME << " | [-h | --help] | [-v | --version] " << std::endl
+              << PROGNAME << " by " << AUTHOR << std::endl
+              << "\033[1mUsage: \033[0m" << PROGNAME << " | [-h | --help] | [-v | --version] " << std::endl
               << "          -h | --help                     Help" << std::endl
               << "          -v | --version                  Version" << std::endl
               << "          -c | --city <name>              Name of the city" << std::endl
-              << "          -d | --date <date>        Day that you want (Today by default)" << std::endl
+              << "          -d | --date <date>              Day that you want (Today by default)" << std::endl
               << "          -i | --interval <date> <date>   Days that you want (Today by default)" << std::endl
+              << "          -f | --filter <filter-list>     See filter usage for filter-list" << std::endl
               << std::endl
               << std::endl
-              << "Date format: DD/MM/YYYY" << std::endl;
+              << "Date format: DD/MM/YYYY" << std::endl
+              << "Filter usage:" << std::endl
+              << "          ./SkyInsight --filter twp" << std::endl
+              << "Filter avaible :" << std::endl
+              << "          t       For temperature" << std::endl
+              << "          w       For global weather (clear, rain...)" << std::endl;
 }
 
 auto print_help = []()
@@ -81,9 +91,9 @@ int main(int argc, char **argv)
               << std::endl;
 
     std::string city = "";
-    Date *start = nullptr;
+    Date *start = new Date();
     Date *end = nullptr;
-
+    std::string strListFilter = "tw";
     if (argc < 1) // number of arg minimum
         failure("One argument required. \n\t-h for help");
 
@@ -121,6 +131,11 @@ int main(int argc, char **argv)
             end = new Date(split(argv[++i], "/"));
             continue;
         }
+        else if (!strcmp(argv[i], "-f") || !strcmp(argv[i], "--filter"))
+        {
+            strListFilter = argv[++i];
+            continue;
+        }
         else
         { // ALL OTHER ARGUMENT
             print_usage();
@@ -128,17 +143,35 @@ int main(int argc, char **argv)
             failure(err);
         }
     }
+ 
+ 
+// Start with the basic "Ville" column
+std::vector<Element> columns = {text("Ville") | border};
 
-    std::cout << "Input recap :" << std::endl
-              << "\tCity : " << city << std::endl;
-    if (end != nullptr)
-    {
-        std::cout << "\tDate : From " + start->getStringDate() + " To " + end->getStringDate() << std::endl;
+// Iterate over each character in strListFilter
+for (char letter : strListFilter) {
+    // Check if the letter corresponds to temperature
+    if (letter == 't') {
+        // Add a column for temperature
+        columns.push_back(text("Temperature") | border | flex);
     }
-    else
-    {
-        std::cout << "\tDate : " + start->getStringDate() << std::endl;
+    // Check if the letter corresponds to weather
+    else if (letter == 'w') {
+        // Add a column for weather
+        columns.push_back(text("Weather") | border | flex);
     }
-    
-    return 0;
+}
+
+// Now, use the dynamically constructed columns in the hbox
+Element document = hbox(columns);
+
+ 
+  auto screen = Screen::Create(
+    Dimension::Full(),       // Width
+    Dimension::Fit(document) // Height
+  );
+  Render(screen, document);
+  screen.Print();
+ 
+  return EXIT_SUCCESS;
 }
