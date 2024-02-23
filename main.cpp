@@ -8,6 +8,8 @@
 #include <ftxui/dom/elements.hpp>
 #include <ftxui/screen/screen.hpp>
 
+using namespace ftxui;
+
 std::string PROGNAME = "SkyInSight";
 std::string FILE_NAME = __FILE__;
 std::string RELEASE = "Revision 0.1 | Last update 6 Feb 2024";
@@ -86,7 +88,7 @@ int main(int argc, char **argv)
     std::string city = "";
     Date *start = new Date();
     Date *end = nullptr;
-
+    std::string strListFilter = "tw";
     if (argc < 1) // number of arg minimum
         failure("One argument required. \n\t-h for help");
 
@@ -126,12 +128,7 @@ int main(int argc, char **argv)
         }
         else if (!strcmp(argv[i], "-f") || !strcmp(argv[i], "--filter"))
         {
-            std::string strListFilter = argv[++i];
-            for (char letter : strListFilter)
-            {
-                // TODO: Make filter when API will be advance
-                std::cout << letter << std::endl;
-            }
+            strListFilter = argv[++i];
             continue;
         }
         else
@@ -141,27 +138,35 @@ int main(int argc, char **argv)
             failure(err);
         }
     }
+ 
+ 
+// Start with the basic "Ville" column
+std::vector<Element> columns = {text("Ville") | border};
 
-    std::cout << "Input recap :" << std::endl
-              << "\tCity : " << city << std::endl;
-    if (end != nullptr)
-    {
-        std::cout << "\tDate : From " + start->getStringDate() + " To " + end->getStringDate() << std::endl;
+// Iterate over each character in strListFilter
+for (char letter : strListFilter) {
+    // Check if the letter corresponds to temperature
+    if (letter == 't') {
+        // Add a column for temperature
+        columns.push_back(text("Temperature") | border | flex);
     }
-    else
-    {
-        std::cout << "\tDate : " + start->getStringDate() << std::endl;
+    // Check if the letter corresponds to weather
+    else if (letter == 'w') {
+        // Add a column for weather
+        columns.push_back(text("Weather") | border | flex);
     }
+}
 
-    const std::string hello{"Hello, World!"};
-    ftxui::Element doc = ftxui::hbox(
-        ftxui::text(hello) | ftxui::border);
-    ftxui::Screen screen = ftxui::Screen::Create(
-        ftxui::Dimension::Fixed(hello.length() + 1),
-        ftxui::Dimension::Fixed(3));
+// Now, use the dynamically constructed columns in the hbox
+Element document = hbox(columns);
 
-    ftxui::Render(screen, doc);
-    screen.Print();
-    std::cout << '\n';
-    return 0;
+ 
+  auto screen = Screen::Create(
+    Dimension::Full(),       // Width
+    Dimension::Fit(document) // Height
+  );
+  Render(screen, document);
+  screen.Print();
+ 
+  return EXIT_SUCCESS;
 }
