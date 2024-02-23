@@ -2,6 +2,7 @@
 #include <string.h>
 #include <fstream>
 #include <stdlib.h>
+#include "src/WeatherApiCaller/WeatherApiCaller.h"
 
 std::string PROGNAME = "SkyInSight";
 std::string FILE_NAME = __FILE__;
@@ -45,6 +46,10 @@ auto print_help = []()
 
 int main(int argc, char **argv)
 {
+    WeatherApiCaller weatherApiCaller("da044ffc858543249a5133512242302");
+    std::cout << weatherApiCaller.getApiKey() << std::endl;
+    std::cout << weatherApiCaller.getCityInfo("Montfavet") << std::endl;
+
     std::cout << "🤗  | Welcome in \033[1m" << PROGNAME << "\033[0m | 🤗" << std::endl;
     print_release();
     std::cout << std::endl

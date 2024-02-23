@@ -5,3 +5,7 @@
 SkyInsight
 
 *.exe
+
+.idea/
+
+cmake-build-debug/
