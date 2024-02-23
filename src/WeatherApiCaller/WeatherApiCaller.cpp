@@ -53,16 +53,6 @@ WeatherData WeatherApiCaller::getCityInfo(string cityName) {
 
     WeatherData data;
     data.parseJson(response);
-
-
-    string output = "";
-
-    output += "Region: " + data.getRegion() + "\n";
-    output += "Country: " + data.getCountry() + "\n";
-    output += "Current temperature: " + to_string(data.getCurrentTempC()) + "°C" + "\n";
-    output += "Sky condition: " + data.getConditionText() + "\n";
-    output += "Wind: " + to_string(data.getWindKph()) + "km/h" + "\n";
-    output += "Humidity: " + to_string(data.getHumidity()) + "%" + "\n\n";
     return data;
 
 }
