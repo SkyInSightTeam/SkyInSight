@@ -25,6 +25,11 @@ endif
 
 all: compiler
 
+install:
+	$(PRINT) "\n$(COLOR)--------| $(COLOR)[1;32mINSTALLING FTXUI$(COLOR)[0m$(COLOR)[32m |--------$(COLOR)[0m\n\n"
+	cd FTXUI && mkdir build && cd build && cmake .. && make && sudo make install
+	$(PRINT) "$(COLOR)[32m\tDONE$(COLOR)[0m\n"
+
 clean:
 	$(PRINT) "\n$(COLOR)--------| $(COLOR)[1;32mCLEANING$(COLOR)[0m$(COLOR)[32m |--------$(COLOR)[0m\n\n"
 	rm -f out.bin *.gch SkyInsight
@@ -32,7 +37,7 @@ clean:
 
 compiler:
 	$(PRINT) "$(COLOR)[32m--------| $(COLOR)[1;32mCompilation of all your .cpp$(COLOR)[0m$(COLOR)[32m |--------$(COLOR)[0m\n\n"
-	$(COMPILER) -std=c++17 -o SkyInsight main.cpp src/Date/Date.cpp
+	$(COMPILER) -std=c++17 -o SkyInsight main.cpp src/Date/Date.cpp -L/usr/local/lib -lftxui-component -lftxui-dom -lftxui-screen
 	$(PRINT) "$(COLOR)[32m\tDONE$(COLOR)[0m\n"
 
 test: compiler
