@@ -7,6 +7,7 @@
 #include <curlpp/cURLpp.hpp>
 #include <curlpp/Easy.hpp>
 #include <curlpp/Options.hpp>
+#include "WeatherData.h"
 
 using namespace std;
 
@@ -21,7 +22,7 @@ class WeatherApiCaller {
     public:
         WeatherApiCaller(string apiKey);
         string getApiKey();
-        string getCityInfo(string cityName);
+        WeatherData getCityInfo(string cityName);
 };
 
 

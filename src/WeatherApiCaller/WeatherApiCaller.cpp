@@ -6,7 +6,6 @@
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
-#include "WeatherData.h"
 
 WeatherApiCaller::WeatherApiCaller(string apiKey) {
     this->apiKey = apiKey;
@@ -22,7 +21,7 @@ size_t WriteCallback(void *contents, size_t size, size_t nmemb, string *s) {
     return total_size;
 }
 
-string WeatherApiCaller::getCityInfo(string cityName) {
+WeatherData WeatherApiCaller::getCityInfo(string cityName) {
     curlpp::Cleanup cleaner;
 
     // Create a request object
@@ -50,7 +49,7 @@ string WeatherApiCaller::getCityInfo(string cityName) {
     // Get the response from the stringstream
     std::string response = responseStream.str();
 
-    std::cout << "Response: " << response << std::endl;
+    // std::cout << "Response: " << response << std::endl;
 
     WeatherData data;
     data.parseJson(response);
@@ -64,6 +63,6 @@ string WeatherApiCaller::getCityInfo(string cityName) {
     output += "Sky condition: " + data.getConditionText() + "\n";
     output += "Wind: " + to_string(data.getWindKph()) + "km/h" + "\n";
     output += "Humidity: " + to_string(data.getHumidity()) + "%" + "\n\n";
-    return output;
+    return data;
 
 }
