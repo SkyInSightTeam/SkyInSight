@@ -15,10 +15,32 @@ string WeatherApiCaller::getApiKey() {
     return this->apiKey;
 }
 
-size_t WriteCallback(void *contents, size_t size, size_t nmemb, string *s) {
-    size_t total_size = size * nmemb;
-    s->append((char*)contents, total_size);
-    return total_size;
+size_t WriteCallback(char* buf, size_t size, size_t nmemb, std::string* response) {
+    response->append(buf, size * nmemb);
+    return size * nmemb;
+}
+
+std::string GetExternalIP() {
+    CURL* curl;
+    CURLcode res;
+    std::string response;
+
+    curl = curl_easy_init();
+    if (curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, "https://api.ipify.org");
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+        res = curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+
+        if (res == CURLE_OK) {
+            return response;
+        } else {
+            // Handle error
+            std::cerr << "Failed to retrieve external IP: " << curl_easy_strerror(res) << std::endl;
+        }
+    }
+    return "";
 }
 
 WeatherData WeatherApiCaller::getCityInfo(string querry) {
@@ -38,7 +60,6 @@ WeatherData WeatherApiCaller::getCityInfo(string querry) {
     long http_code;
     curl_easy_getinfo(request.getHandle(), CURLINFO_RESPONSE_CODE, &http_code);
     if (http_code != 200) {
-        // Handle HTTP error here (e.g., throw an exception)
         throw std::runtime_error("HTTP request failed with code: " + std::to_string(http_code));
     }
 
@@ -46,4 +67,13 @@ WeatherData WeatherApiCaller::getCityInfo(string querry) {
     WeatherData data;
     data.parseJson(response);
     return data;
+}
+
+WeatherData WeatherApiCaller::getCityInfoByIp() {
+    std::string externalIP = GetExternalIP();
+    if (!externalIP.empty()) {
+        return getCityInfo(externalIP);
+    } else {
+        std::cerr << "Failed to retrieve external IP address." << std::endl;
+    }
 }

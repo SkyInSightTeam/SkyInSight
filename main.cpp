@@ -83,6 +83,7 @@ int main(int argc, char **argv)
 {
     WeatherApiCaller weatherApiCaller("da044ffc858543249a5133512242302");
     WeatherData data = weatherApiCaller.getCityInfo("Montfavet");
+    weatherApiCaller.getCityInfoByIp();
 
     std::cout << "🤗  | Welcome in \033[1m" << PROGNAME << "\033[0m | 🤗" << std::endl;
     print_release();
