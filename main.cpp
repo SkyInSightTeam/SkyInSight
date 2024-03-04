@@ -60,6 +60,26 @@ auto print_help = []()
     exit(0);
 };
 
+std::vector<std::string> parseCitiesFromJson(const std::string& jsonContent) {
+    rapidjson::Document doc;
+    doc.Parse(jsonContent.c_str());
+
+    std::vector<std::string> cities;
+    if (doc.HasMember("cities") && doc["cities"].IsArray()) {
+        const rapidjson::Value& citiesArray = doc["cities"];
+
+        for (rapidjson::SizeType i = 0; i < citiesArray.Size(); i++) {
+            if (citiesArray[i].IsString()) {
+                cities.push_back(citiesArray[i].GetString());
+            }
+        }
+    } else {
+        std::cerr << "JSON does not contain 'cities' array." << std::endl;
+    }
+
+    return cities;
+}
+
 // for string delimiter
 // source: https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c
 std::vector<std::string> split(std::string s, std::string delimiter)
@@ -109,10 +129,10 @@ int main(int argc, char **argv)
 
     Date *start = new Date();
     Date *end = nullptr;
-    std::string strListFilter = "tw";
+    std::string strListFilter = "tw"; // For temp and weather by default
     bool isCitySet = true;
 
-
+    std::vector<std::string> cities;
     std::string city;
 
     if (argc < 2)
@@ -148,10 +168,32 @@ int main(int argc, char **argv)
             print_release();
             exit(0);
         }
+        else if (!strcmp(argv[i], "-C") || !strcmp(argv[i], "--Cities"))
+        {
+            if (argv[i+1]==NULL){
+                std::cout << "Invalid argument" << std::endl;
+                print_usage();
+                exit(0);
+            }
+
+            std::string citiesConfig = argv[++i];
+
+            std::ifstream file(citiesConfig);
+            if (!file.is_open()) {
+                failure("Failed to open file: " + citiesConfig );
+                exit(-1);
+            }
+
+            std::stringstream buffer;
+            buffer << file.rdbuf();
+            cities = parseCitiesFromJson(buffer.str());
+            exit(0);
+        }
         else if (!strcmp(argv[i], "-c") || !strcmp(argv[i], "--city"))
         {
             if (argv[i+1]==NULL){
-                std::cout << "Argument invalide, veuillez préciser la ville souhaitée avec -c | --city <nom>" << std::endl;
+                std::cout << "Invalid argument" << std::endl;
+                print_usage();
                 exit(0);
             }
             city = argv[++i];
@@ -222,6 +264,9 @@ int main(int argc, char **argv)
     }
 
     WeatherData data;
+    if(!cities.empty()){
+        // TODO: Complete that part for interpretation.
+    }
     if (isCitySet) {
         data = weatherApiCaller.getCityInfo(city);
     }
