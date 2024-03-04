@@ -10,7 +10,9 @@
 #include <ftxui/screen/screen.hpp>
 
 using namespace ftxui;
-
+//N'oublie pas de lancer wsl avant de make and faire ./SkyInsight pour lancer
+//tout est setup et on est dans notre propre branche pour qu'on fix l'erreur simple de ne pas mettre de ville dans le input
+//de get city Info
 std::string PROGNAME = "SkyInSight";
 std::string FILE_NAME = __FILE__;
 std::string RELEASE = "Revision 0.1 | Last update 6 Feb 2024";
@@ -110,13 +112,12 @@ int main(int argc, char **argv)
         }
         else if (!strcmp(argv[i], "-c") || !strcmp(argv[i], "--city"))
         {
+            if (argv[i+1]==NULL){
+                std::cout << "Argument invalide, veuillez préciser la ville souhaitée avec -c | --city <nom>" << std::endl;
+                exit(0);
+            }
             city = argv[++i];
-            continue;
-        }
-        else if (!strcmp(argv[i], "-c") || !strcmp(argv[i], "--city"))
-        {
-            city = argv[++i];
-            std::cout << "Your city = " << city << std::endl;
+            //std::cout << "Your city = " << city << std::endl;
             continue;
         }
         else if (!strcmp(argv[i], "-d") || !strcmp(argv[i], "--date"))
