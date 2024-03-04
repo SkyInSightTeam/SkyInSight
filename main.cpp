@@ -8,6 +8,7 @@
 #include <vector>
 #include <ftxui/dom/elements.hpp>
 #include <ftxui/screen/screen.hpp>
+#include <chrono>
 
 using namespace ftxui;
 //N'oublie pas de lancer wsl avant de make and faire ./SkyInsight pour lancer
@@ -80,6 +81,25 @@ std::vector<std::string> split(std::string s, std::string delimiter)
     res.push_back(s.substr(pos_start));
     return res;
 }
+std::string getStringCurrentDate() {
+    //Ce n'est pas ridiculement compliquer
+    // Obtaining the current time
+    auto currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+    // Convert the time to std::tm
+    std::tm* localTime = std::localtime(&currentTime);
+
+    // Create a stringstream to build the date string
+    std::stringstream dateStream;
+
+    // Insert the date components into the stringstream
+    dateStream << localTime->tm_mday << "/" << (localTime->tm_mon + 1) << "/" << (localTime->tm_year + 1900);
+
+    // Get the date string
+    std::string dateString = dateStream.str();
+
+    return dateString;
+}
 
 int main(int argc, char **argv)
 {
@@ -122,11 +142,21 @@ int main(int argc, char **argv)
         }
         else if (!strcmp(argv[i], "-d") || !strcmp(argv[i], "--date"))
         {
+            if (argv[i+1]==NULL){
+                start = new Date(split(getStringCurrentDate(), "/"));
+                //std::cout << "Date par défaut, aujourd'hui: " <<start->getStringDate()<< std::endl;
+                continue;
+            }
             start = new Date(split(argv[++i], "/"));
             continue;
         }
         else if (!strcmp(argv[i], "-i") || !strcmp(argv[i], "--interval"))
         {
+            if (argv[i+1]==NULL&&argv[i+2]==NULL){
+                start = new Date(split(getStringCurrentDate(), "/"));
+                end= new Date(split(getStringCurrentDate(), "/"));
+                exit(0);
+            }
             if (argv[i+1]==NULL||argv[i+2]==NULL){
                 std::cout << "Argument invalide, veuillez préciser l'intervale souhaitée avec -i | --interval <date> <date>" << std::endl;
                 exit(0);
@@ -137,6 +167,10 @@ int main(int argc, char **argv)
         }
         else if (!strcmp(argv[i], "-f") || !strcmp(argv[i], "--filter"))
         {
+            if (argv[i+1]==NULL){
+                std::cout << "Argument invalide, veuillez préciser un filtre avec --filter <filter-list>" << std::endl;
+                exit(0);
+            }
             strListFilter = argv[++i];
             continue;
         }
