@@ -12,3 +12,5 @@ FTXUI/
 .idea/
 
 cmake-build-debug/
+
+include/
