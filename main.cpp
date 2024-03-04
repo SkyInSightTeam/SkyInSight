@@ -127,6 +127,10 @@ int main(int argc, char **argv)
         }
         else if (!strcmp(argv[i], "-i") || !strcmp(argv[i], "--interval"))
         {
+            if (argv[i+1]==NULL||argv[i+2]==NULL){
+                std::cout << "Argument invalide, veuillez préciser l'intervale souhaitée avec -i | --interval <date> <date>" << std::endl;
+                exit(0);
+            }
             start = new Date(split(argv[++i], "/"));
             end = new Date(split(argv[++i], "/"));
             continue;
