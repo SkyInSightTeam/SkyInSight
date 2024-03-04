@@ -91,6 +91,7 @@ int main(int argc, char **argv)
     Date *start = new Date();
     Date *end = nullptr;
     std::string strListFilter = "tw";
+    bool isCitySet = true;
 
 
     std::string city;
@@ -107,7 +108,7 @@ int main(int argc, char **argv)
             }
             else
             {
-                std::cout << "No default city set." << std::endl;
+                isCitySet = false;
             }
         }
         else
@@ -132,6 +133,7 @@ int main(int argc, char **argv)
         {
             city = argv[++i];
             std::cout << "Your city = " << city << std::endl;
+            isCitySet = true;
             continue;
         }
         else if (!strcmp(argv[i], "-d") || !strcmp(argv[i], "--date"))
@@ -173,10 +175,16 @@ int main(int argc, char **argv)
         }
     }
 
-    WeatherData data = weatherApiCaller.getCityInfo(city);
+    WeatherData data;
+    if (isCitySet) {
+        data = weatherApiCaller.getCityInfo(city);
+    }
+    else {
+        data = weatherApiCaller.getCityInfoByIp();
+    }
 
     // Start with the basic "Ville" column
-    std::vector<Element> columns = {text(city) | border};
+    std::vector<Element> columns = {text(data.getLocationName()) | border};
 
     // Iterate over each character in strListFilter
     for (char letter : strListFilter) {
