@@ -82,8 +82,7 @@ std::vector<std::string> split(std::string s, std::string delimiter)
 int main(int argc, char **argv)
 {
     WeatherApiCaller weatherApiCaller("da044ffc858543249a5133512242302");
-    std::cout << weatherApiCaller.getApiKey() << std::endl;
-    std::cout << weatherApiCaller.getCityInfo("Montfavet") << std::endl;
+    WeatherData data = weatherApiCaller.getCityInfo("Montfavet");
 
     std::cout << "🤗  | Welcome in \033[1m" << PROGNAME << "\033[0m | 🤗" << std::endl;
     print_release();
@@ -153,12 +152,12 @@ for (char letter : strListFilter) {
     // Check if the letter corresponds to temperature
     if (letter == 't') {
         // Add a column for temperature
-        columns.push_back(text("Temperature") | border | flex);
+        columns.push_back(text(to_string(data.getCurrentTempC()) + "°C" + "\n") | border | flex);
     }
     // Check if the letter corresponds to weather
     else if (letter == 'w') {
         // Add a column for weather
-        columns.push_back(text("Weather") | border | flex);
+        columns.push_back(text(data.getConditionText()) | border | flex);
     }
 }
 

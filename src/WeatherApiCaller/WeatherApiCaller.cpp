@@ -6,7 +6,6 @@
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
-#include "WeatherData.h"
 
 WeatherApiCaller::WeatherApiCaller(string apiKey) {
     this->apiKey = apiKey;
@@ -22,48 +21,29 @@ size_t WriteCallback(void *contents, size_t size, size_t nmemb, string *s) {
     return total_size;
 }
 
-string WeatherApiCaller::getCityInfo(string cityName) {
+WeatherData WeatherApiCaller::getCityInfo(string querry) {
     curlpp::Cleanup cleaner;
 
-    // Create a request object
     curlpp::Easy request;
-
-    // Set the request URL
     request.setOpt(curlpp::options::Url("http://api.weatherapi.com/v1/current.json"));
 
-    // Set the request method to POST
     request.setOpt(new curlpp::options::Post(true));
-
-    // Set the request body data if needed
-    std::string postData = "key=" + apiKey + "&q=" + cityName;
+    std::string postData = "key=" + apiKey + "&q=" + querry;
     request.setOpt(new curlpp::options::PostFields(postData));
 
-    // Create a stringstream to store the response
     std::stringstream responseStream;
-
-    // Set the write stream option to the stringstream
     request.setOpt(new curlpp::options::WriteStream(&responseStream));
-
-    // Perform the request
     request.perform();
 
-    // Get the response from the stringstream
+    long http_code;
+    curl_easy_getinfo(request.getHandle(), CURLINFO_RESPONSE_CODE, &http_code);
+    if (http_code != 200) {
+        // Handle HTTP error here (e.g., throw an exception)
+        throw std::runtime_error("HTTP request failed with code: " + std::to_string(http_code));
+    }
+
     std::string response = responseStream.str();
-
-    std::cout << "Response: " << response << std::endl;
-
     WeatherData data;
     data.parseJson(response);
-
-
-    string output = "";
-
-    output += "Region: " + data.getRegion() + "\n";
-    output += "Country: " + data.getCountry() + "\n";
-    output += "Current temperature: " + to_string(data.getCurrentTempC()) + "°C" + "\n";
-    output += "Sky condition: " + data.getConditionText() + "\n";
-    output += "Wind: " + to_string(data.getWindKph()) + "km/h" + "\n";
-    output += "Humidity: " + to_string(data.getHumidity()) + "%" + "\n\n";
-    return output;
-
+    return data;
 }
