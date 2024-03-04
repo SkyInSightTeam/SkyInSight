@@ -23,6 +23,7 @@ class WeatherApiCaller {
         WeatherApiCaller(string apiKey);
         string getApiKey();
         WeatherData getCityInfo(string querry);
+        WeatherData getCityInfoByIp();
 };
 
 
