@@ -24,9 +24,15 @@ auto print_release = []
               << COPYRIGHT << '\n';
 };
 
+auto warning = [](std::string_view message)
+{
+    std::cerr << "❌ Error: " << message << " ❌\n";
+};
+
 auto failure = [](std::string_view message)
 {
     std::cerr << "❌ Error: " << message << " ❌\n";
+    exit(-1);
 };
 
 void print_usage()
@@ -101,19 +107,31 @@ int main(int argc, char **argv)
         std::ifstream configFile("config.txt");
         if (configFile.is_open())
         {
-            std::string cityChose;
-            if (std::getline(configFile, cityChose))
-            {
-                city = cityChose;
+            if (configFile.peek() == std::ifstream::traits_type::eof()) {
+                configFile.close();
+                failure("Missing api key. \n\t-h for help");
             }
-            else
-            {
+            std::string line;
+            std::string apiKey;
+            std::string cityChose;
+            int currentLine = 0;
+            while (std::getline(configFile, line)) {
+                if (currentLine == 0) {
+                    apiKey = line;
+                }
+                else if (currentLine == 1) {
+                    cityChose = line;
+                }
+                currentLine++;
+            }
+            configFile.close();
+            if (currentLine < 2) {
                 isCitySet = false;
             }
         }
         else
         {
-            failure("One argument required. \n\t-h for help");
+            failure("Missing config file. \n\t-h for help");
         }
     }
 
