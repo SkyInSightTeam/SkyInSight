@@ -82,19 +82,39 @@ std::vector<std::string> split(std::string s, std::string delimiter)
 int main(int argc, char **argv)
 {
     WeatherApiCaller weatherApiCaller("da044ffc858543249a5133512242302");
-    WeatherData data = weatherApiCaller.getCityInfo("Montfavet");
 
     std::cout << "🤗  | Welcome in \033[1m" << PROGNAME << "\033[0m | 🤗" << std::endl;
     print_release();
     std::cout << std::endl
               << std::endl;
 
-    std::string city = "";
     Date *start = new Date();
     Date *end = nullptr;
     std::string strListFilter = "tw";
-    if (argc < 1) // number of arg minimum
-        failure("One argument required. \n\t-h for help");
+
+
+    std::string city;
+
+    if (argc < 2)
+    {
+        std::ifstream configFile("config.txt");
+        if (configFile.is_open())
+        {
+            std::string cityChose;
+            if (std::getline(configFile, cityChose))
+            {
+                city = cityChose;
+            }
+            else
+            {
+                std::cout << "No default city set." << std::endl;
+            }
+        }
+        else
+        {
+            failure("One argument required. \n\t-h for help");
+        }
+    }
 
     for (int i = 1; i < argc; i++)
     {
@@ -107,11 +127,6 @@ int main(int argc, char **argv)
         {
             print_release();
             exit(0);
-        }
-        else if (!strcmp(argv[i], "-c") || !strcmp(argv[i], "--city"))
-        {
-            city = argv[++i];
-            continue;
         }
         else if (!strcmp(argv[i], "-c") || !strcmp(argv[i], "--city"))
         {
@@ -135,6 +150,21 @@ int main(int argc, char **argv)
             strListFilter = argv[++i];
             continue;
         }
+        if (i + 1 < argc && argv[i + 1] && argv[i + 1][0] != '-') {
+            city = argv[++i]; 
+            std::cout << "Default city set to: " << city << std::endl;
+            std::ofstream configFile("config.txt");
+            if (configFile.is_open())
+            {
+                configFile << city;
+                configFile.close();
+            }
+            else
+            {
+                std::cerr << "Error: Unable to open config.txt for writing." << std::endl;
+            }
+            continue;
+        }
         else
         { // ALL OTHER ARGUMENT
             print_usage();
@@ -142,35 +172,34 @@ int main(int argc, char **argv)
             failure(err);
         }
     }
- 
- 
-// Start with the basic "Ville" column
-std::vector<Element> columns = {text("Ville") | border};
 
-// Iterate over each character in strListFilter
-for (char letter : strListFilter) {
-    // Check if the letter corresponds to temperature
-    if (letter == 't') {
-        // Add a column for temperature
-        columns.push_back(text(to_string(data.getCurrentTempC()) + "°C" + "\n") | border | flex);
+    WeatherData data = weatherApiCaller.getCityInfo(city);
+
+    // Start with the basic "Ville" column
+    std::vector<Element> columns = {text(city) | border};
+
+    // Iterate over each character in strListFilter
+    for (char letter : strListFilter) {
+        // Check if the letter corresponds to temperature
+        if (letter == 't') {
+            // Add a column for temperature
+            columns.push_back(text(to_string(data.getCurrentTempC()) + "°C" + "\n") | border | flex);
+        }
+        // Check if the letter corresponds to weather
+        else if (letter == 'w') {
+            // Add a column for weather
+            columns.push_back(text(data.getConditionText()) | border | flex);
+        }
     }
-    // Check if the letter corresponds to weather
-    else if (letter == 'w') {
-        // Add a column for weather
-        columns.push_back(text(data.getConditionText()) | border | flex);
-    }
-}
 
-// Now, use the dynamically constructed columns in the hbox
-Element document = hbox(columns);
+    // Now, use the dynamically constructed columns in the hbox
+    Element document = hbox(columns);
+    auto screen = Screen::Create(
+        Dimension::Full(),       // Width
+        Dimension::Fit(document) // Height
+    );
+    Render(screen, document);
+    screen.Print();
 
- 
-  auto screen = Screen::Create(
-    Dimension::Full(),       // Width
-    Dimension::Fit(document) // Height
-  );
-  Render(screen, document);
-  screen.Print();
- 
-  return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
