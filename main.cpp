@@ -193,7 +193,7 @@ int main(int argc, char **argv)
             replaceLine("config.txt", 1, apiKey);
             continue;
         }
-        else if (!strcmp(argv[i], "-city")) {
+        else if (!strcmp(argv[i], "-setcity")) {
             if (i + 1 < argc && argv[i + 1] && argv[i + 1][0] != '-') {
                 city = argv[++i];
                 std::cout << "Default city set to: " << city << std::endl;
