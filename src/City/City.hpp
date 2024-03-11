@@ -1,13 +1,10 @@
-#ifndef cityHPP
-
-#define cityHPP
-
-#include <string>
-#include <iostream>
+#include "string"
+#include <sstream>
 #include <curlpp/cURLpp.hpp>
 #include <curlpp/Easy.hpp>
 #include <curlpp/Options.hpp>
 #include <vector>
+#include <iostream>
 
 using namespace std;
 
@@ -19,8 +16,5 @@ class City {
 
     public:
         City(string lat, string lon, string displayName);
-        vector<City> static getAllCitiesFromCityName(string cityName);
-        string getDisplayName();
+        static void getAllCitiesFromCityName(string cityName);
 };
-
-#endif
