@@ -9,6 +9,7 @@
 #include <ftxui/dom/elements.hpp>
 #include <ftxui/screen/screen.hpp>
 #include <chrono>
+#include "src/City/City.hpp"
 
 using namespace ftxui;
 std::string PROGNAME = "SkyInSight";
@@ -156,6 +157,7 @@ int main(int argc, char **argv)
             }
             city = argv[++i];
             std::cout << "Your city = " << city << std::endl;
+            // Call City here
             isCitySet = true;
             continue;
         }
@@ -245,6 +247,8 @@ int main(int argc, char **argv)
             columns.push_back(text(data.getConditionText()) | border | flex);
         }
     }
+
+    City.getAllCitiesFromCityName("Avignon");
 
     // Now, use the dynamically constructed columns in the hbox
     Element document = hbox(columns);
