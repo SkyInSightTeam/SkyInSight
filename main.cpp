@@ -5,11 +5,11 @@
 #include <stdlib.h>
 #include "src/WeatherApiCaller/WeatherApiCaller.h"
 #include "src/Date/Date.hpp"
+#include "src/City/City.hpp"
 #include <vector>
 #include <ftxui/dom/elements.hpp>
 #include <ftxui/screen/screen.hpp>
 #include <chrono>
-#include "src/City/City.hpp"
 
 using namespace ftxui;
 std::string PROGNAME = "SkyInSight";
@@ -248,7 +248,15 @@ int main(int argc, char **argv)
         }
     }
 
-    City.getAllCitiesFromCityName("Avignon");
+    vector<City> cities = City::getAllCitiesFromCityName("Avignon");
+    if (cities.empty()) {
+        cout << "Error retrieving cities." << endl;
+    } else {
+        // Process the retrieved cities (e.g., print their details)
+        for (City& city : cities) {
+        cout << "City: " << city.getDisplayName() << endl;
+        }
+    }
 
     // Now, use the dynamically constructed columns in the hbox
     Element document = hbox(columns);

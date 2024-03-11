@@ -1,5 +1,9 @@
-#include "string"
-#include <sstream>
+#ifndef cityHPP
+
+#define cityHPP
+
+#include <string>
+#include <iostream>
 #include <curlpp/cURLpp.hpp>
 #include <curlpp/Easy.hpp>
 #include <curlpp/Options.hpp>
@@ -15,5 +19,8 @@ class City {
 
     public:
         City(string lat, string lon, string displayName);
-        std::vector<City> static getAllCitiesFromCityName(string cityName);
+        vector<City> static getAllCitiesFromCityName(string cityName);
+        string getDisplayName();
 };
+
+#endif
