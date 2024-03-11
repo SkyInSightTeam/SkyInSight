@@ -43,7 +43,7 @@ compiler:
 
 test: compiler
 	$(PRINT) "$(COLOR)[32m--------| Test of the binary file |--------$(COLOR)[0m\n\n"
-	./SkyInsight
+	./SkyInsight -C cities.json
 	$(PRINT) "\tDONE$(COLOR)[0m\n"
 
 .PHONY: all clean test
