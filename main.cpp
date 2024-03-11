@@ -275,6 +275,7 @@ int main(int argc, char **argv)
             else if (currentLine == 1) {
                 if (line != "0") {
                     city = line;
+                    isCitySet = true;
                 }
             }
             currentLine++;
