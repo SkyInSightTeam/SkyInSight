@@ -18,6 +18,7 @@ Date::Date()
     this->year = tstruct.tm_year + 1900;
 }
 
+
 Date::Date(int day, int month, int year)
 {
     if(!isDateValid(day, month, year)) {
@@ -58,5 +59,30 @@ bool Date::isDateValid(int day, int month, int year)
 
 std::string Date::getStringDate()
 {
-    return std::to_string(this->day) + "/" + std::to_string(this->month) + "/" + std::to_string(this->year);
+    return std::to_string(this->day) + "-" + std::to_string(this->month) + "-   " + std::to_string(this->year);
+}
+
+std::string Date::formatDateAPI()
+{
+    return std::to_string(this->year) + "-" + std::to_string(this->month) + "-   " + std::to_string(this->day);
+}
+
+bool Date::operator<(const Date& rhs) const {
+    if (year != rhs.year)
+        return year < rhs.year;
+    if (month != rhs.month)
+        return month < rhs.month;
+    return day < rhs.day;
+}
+
+bool Date::operator>(const Date& rhs) const {
+    return rhs < *this;
+}
+
+bool Date::operator==(const Date& rhs) const {
+    return year == rhs.year && month == rhs.month && day == rhs.day;
+}
+
+bool Date::operator!=(const Date& rhs) const {
+    return !(*this == rhs);
 }
