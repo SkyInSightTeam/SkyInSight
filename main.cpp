@@ -42,6 +42,7 @@ void print_usage()
               << "\033[1mUsage: \033[0m" << PROGNAME << " | [-h | --help] | [-v | --version] " << std::endl
               << "          -h | --help                     Help" << std::endl
               << "          -v | --version                  Version" << std::endl
+              << "          -k | --key <name>               Set your api key in the config file" << std::endl
               << "          -c | --city <name>              Name of the city" << std::endl
               << "          -d | --date <date>              Day that you want (Today by default)" << std::endl
               << "          -f | --filter <filter-list>     See filter usage for filter-list" << std::endl
@@ -110,17 +111,16 @@ std::vector<std::string> split(std::string s, std::string delimiter)
     return res;
 }
 
-
-std::string getStringCurrentDate() {
+std::string getStringCurrentDate()
+{
     auto currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    std::tm* localTime = std::localtime(&currentTime);
+    std::tm *localTime = std::localtime(&currentTime);
     std::stringstream dateStream;
     dateStream << localTime->tm_mday << "/" << (localTime->tm_mon + 1) << "/" << (localTime->tm_year + 1900);
 
     std::string dateString = dateStream.str();
     return dateString;
 }
-
 
 std::vector<Element> getWeatherCols(std::string strListFilter, WeatherData data)
 {
@@ -143,20 +143,22 @@ std::vector<Element> getWeatherCols(std::string strListFilter, WeatherData data)
     return columns;
 }
 
-
-void replaceLine(const string& filename, int lineNumber, const string& newLine) {
+void replaceLine(const string &filename, int lineNumber, const string &newLine)
+{
     ifstream inputFile(filename);
     vector<string> lines;
     string line;
 
     // Read all lines from the file into a vector
-    while (getline(inputFile, line)) {
+    while (getline(inputFile, line))
+    {
         lines.push_back(line);
     }
 
     inputFile.close();
 
-    if (lineNumber < 1 || lineNumber > lines.size()) {
+    if (lineNumber < 1 || lineNumber > lines.size())
+    {
         cout << "Invalid line number" << endl;
         return;
     }
@@ -164,7 +166,8 @@ void replaceLine(const string& filename, int lineNumber, const string& newLine) 
     lines[lineNumber - 1] = newLine;
 
     ofstream outputFile(filename);
-    for (const string& updatedLine : lines) {
+    for (const string &updatedLine : lines)
+    {
         outputFile << updatedLine << endl;
     }
     outputFile.close();
@@ -172,19 +175,19 @@ void replaceLine(const string& filename, int lineNumber, const string& newLine) 
     cout << "Line replaced successfully" << endl;
 }
 
-int getNumberOfLines(const string& filename) {
+int getNumberOfLines(const string &filename)
+{
     ifstream inputFile(filename);
     string line;
     int numberOfLines = 0;
 
-    while (getline(inputFile, line)) {
+    while (getline(inputFile, line))
+    {
         numberOfLines++;
     }
     inputFile.close();
     return numberOfLines;
 }
-
-
 
 int main(int argc, char **argv)
 {
@@ -194,16 +197,14 @@ int main(int argc, char **argv)
     std::cout << std::endl
               << std::endl;
 
-    Date* start = new Date();
+    Date *start = new Date();
     Date *end = nullptr;
     std::string strListFilter = "tw"; // For temp and weather by default
     bool isCitySet = true;
 
-
     std::vector<std::string> cities;
     std::string city;
     std::string apiKey;
-
 
     for (int i = 1; i < argc; i++)
     {
@@ -278,17 +279,20 @@ int main(int argc, char **argv)
             isCitySet = false;
             continue;
         }
-        else if (!strcmp(argv[i], "-key"))
+        else if (!strcmp(argv[i], "-k") || !strcmp(argv[i], "--key"))
         {
-            if (argv[i+1]==NULL && argv[i + 1][0] != '-') {
+            if (argv[i + 1] == NULL && argv[i + 1][0] != '-')
+            {
                 failure("You need to put the api key after -key");
             }
             apiKey = argv[++i];
             replaceLine("config.txt", 1, apiKey);
             continue;
         }
-        else if (!strcmp(argv[i], "-setcity")) {
-            if (i + 1 < argc && argv[i + 1] && argv[i + 1][0] != '-') {
+        else if (!strcmp(argv[i], "-setcity"))
+        {
+            if (i + 1 < argc && argv[i + 1] && argv[i + 1][0] != '-')
+            {
                 city = argv[++i];
                 std::cout << "Default city set to: " << city << std::endl;
                 replaceLine("config.txt", 2, city);
@@ -304,49 +308,38 @@ int main(int argc, char **argv)
     }
 
     WeatherData data;
-    if (!cities.empty())
-    {
-        std::vector<Element> rows;
-        for (std::string city : cities)
-        {
-            WeatherData data = weatherApiCaller.getCityInfo(city);
-            std::vector<Element> columns = getWeatherCols(strListFilter, data);
-            rows.push_back(hbox(columns));
-        }
-        if (!rows.empty()) {
-        Element document = vbox(vbox(std::move(rows))| border);
-
-        auto screen = Screen::Create(
-            Dimension::Full(),       // Width
-            Dimension::Fit(document) // Height
-        );
-        Render(screen, document);
-        screen.Print();
 
     std::fstream configFile("config.txt");
-    if (configFile.is_open()) {
-        if (getNumberOfLines("config.txt") != 2){
+    if (configFile.is_open())
+    {
+        if (getNumberOfLines("config.txt") != 2)
+        {
             std::ofstream outputFile("config.txt", ios::trunc);
             outputFile.close();
 
-            for (int i=0; i < 2; i++) {
+            for (int i = 0; i < 2; i++)
+            {
                 configFile << "0" << endl;
             }
 
             failure("Do not change the config file manualy");
-
         }
         std::string line;
         int currentLine = 0;
-        while (std::getline(configFile, line)) {
-            if (currentLine == 0) {
-                if (line == "0") {
+        while (std::getline(configFile, line))
+        {
+            if (currentLine == 0)
+            {
+                if (line == "0")
+                {
                     failure("Missing api key. \n\t-h for help");
                 }
                 apiKey = line;
             }
-            else if (currentLine == 1) {
-                if (line != "0") {
+            else if (currentLine == 1)
+            {
+                if (line != "0")
+                {
                     city = line;
                     isCitySet = true;
                 }
@@ -361,11 +354,26 @@ int main(int argc, char **argv)
     }
     WeatherApiCaller weatherApiCaller(apiKey);
 
-    WeatherData data;
-    if (isCitySet) {
-        data = weatherApiCaller.getDateCityInfo(city, start);
+    if (!cities.empty())
+    {
+        std::vector<Element> rows;
+        for (std::string city : cities)
+        {
+            WeatherData data = weatherApiCaller.getCityInfo(city);
+            std::vector<Element> columns = getWeatherCols(strListFilter, data);
+            rows.push_back(hbox(columns));
+        }
+        if (!rows.empty())
+        {
+            Element document = vbox(vbox(std::move(rows)) | border);
 
-    }
+            auto screen = Screen::Create(
+                Dimension::Full(),       // Width
+                Dimension::Fit(document) // Height
+            );
+            Render(screen, document);
+            screen.Print();
+        }
     }
     else
     {
