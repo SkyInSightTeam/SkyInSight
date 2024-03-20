@@ -1,0 +1,16 @@
+.vscode/
+
+.DS_Store
+
+SkyInsight
+
+*.exe
+
+
+FTXUI/
+
+.idea/
+
+cmake-build-debug/
+
+include/
