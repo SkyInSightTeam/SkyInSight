@@ -79,22 +79,13 @@ std::vector<std::string> split(std::string s, std::string delimiter)
     return res;
 }
 std::string getStringCurrentDate() {
-    //Ce n'est pas ridiculement compliquer
-    // Obtaining the current time
     auto currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
-    // Convert the time to std::tm
     std::tm* localTime = std::localtime(&currentTime);
-
-    // Create a stringstream to build the date string
     std::stringstream dateStream;
-
-    // Insert the date components into the stringstream
     dateStream << localTime->tm_mday << "/" << (localTime->tm_mon + 1) << "/" << (localTime->tm_year + 1900);
 
-    // Get the date string
     std::string dateString = dateStream.str();
-
     return dateString;
 }
 
@@ -107,7 +98,7 @@ int main(int argc, char **argv)
     std::cout << std::endl
               << std::endl;
 
-    Date *start = new Date();
+    Date* start = new Date();
     Date *end = nullptr;
     std::string strListFilter = "tw";
     bool isCitySet = true;
@@ -163,7 +154,6 @@ int main(int argc, char **argv)
         {
             if (argv[i+1]==NULL){
                 start = new Date(split(getStringCurrentDate(), "/"));
-                //std::cout << "Date par défaut, aujourd'hui: " <<start->getStringDate()<< std::endl;
                 continue;
             }
             start = new Date(split(argv[++i], "/"));
@@ -223,7 +213,7 @@ int main(int argc, char **argv)
 
     WeatherData data;
     if (isCitySet) {
-        data = weatherApiCaller.getCityInfo(city);
+        data = weatherApiCaller.getDateCityInfo(city, start);
     }
     else {
         data = weatherApiCaller.getCityInfoByIp();

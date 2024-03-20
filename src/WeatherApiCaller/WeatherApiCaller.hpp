@@ -22,7 +22,7 @@ private:
     static std::string BASE_URL;
 public:
     WeatherApiCaller(string apiKey);
-    WeatherData getDateCityInfo(std::string querry, Date date);
+    WeatherData getDateCityInfo(std::string querry, Date* date);
     string getApiKey();
     WeatherData getCityInfo(string querry);
     WeatherData getCityInfoByIp();

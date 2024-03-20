@@ -8,7 +8,6 @@
 #include "rapidjson/stringbuffer.h"
 #include "../Date/Date.hpp"
 
-
 std::string WeatherApiCaller::BASE_URL = "http://api.weatherapi.com/v1";
 WeatherApiCaller::WeatherApiCaller(string apiKey)
 {
@@ -64,7 +63,6 @@ WeatherData WeatherApiCaller::getCityInfo(string querry)
     request.setOpt(new curlpp::options::Post(true));
     std::string postData = "key=" + apiKey + "&q=" + querry;
     request.setOpt(new curlpp::options::PostFields(postData));
-
     std::stringstream responseStream;
     request.setOpt(new curlpp::options::WriteStream(&responseStream));
     request.perform();
@@ -82,34 +80,30 @@ WeatherData WeatherApiCaller::getCityInfo(string querry)
     return data;
 }
 
-WeatherData WeatherApiCaller::getDateCityInfo(std::string querry, Date date)
-{
+WeatherData WeatherApiCaller::getDateCityInfo(std::string query, Date *date) {
     std::string endpoint = "/history.json";
-    Date currentDate;
-    if (date > currentDate)
-    { 
+    Date *currentDate = new Date();
+    if (currentDate->formatDateAPI() == date->formatDateAPI()) {
+        return getCityInfo(query);
+    }
+    if (*date > *currentDate) {
         endpoint = "/future.json";
     }
+    std::string urlWithParams = BASE_URL + endpoint + "?key=" + apiKey + "&q=" + query + "&dt=" + date->formatDateAPI();
     curlpp::Cleanup cleaner;
-
     curlpp::Easy request;
-    request.setOpt(curlpp::options::Url(BASE_URL + endpoint));
-
-    request.setOpt(new curlpp::options::Post(true));
-    std::string postData = "key=" + apiKey + "&q=" + querry + "dt=" + date.formatDateAPI();
-    request.setOpt(new curlpp::options::PostFields(postData));
-
+    
+    request.setOpt(new curlpp::options::Url(urlWithParams));  
     std::stringstream responseStream;
     request.setOpt(new curlpp::options::WriteStream(&responseStream));
     request.perform();
-
     long http_code;
     curl_easy_getinfo(request.getHandle(), CURLINFO_RESPONSE_CODE, &http_code);
-    if (http_code != 200)
-    {
-        throw std::runtime_error("HTTP request failed with code: " + std::to_string(http_code));
+    if (http_code != 200) {
+        std::cerr << "HTTP request failed with code: " << std::to_string(http_code) << std::endl;
+        std::cerr << "Response Body: " << responseStream.str() << std::endl;
+        exit(-1);
     }
-
     std::string response = responseStream.str();
     WeatherData data;
     data.parseJson(response);

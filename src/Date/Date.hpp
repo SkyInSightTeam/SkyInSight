@@ -19,7 +19,7 @@ public:
 
     Date(int, int, int);
     std::string getStringDate();
-    std::string formatDateAPI();
+    std::string formatDateAPI() const;
     bool operator<(const Date &rhs) const;
     bool operator>(const Date &rhs) const;
     bool operator==(const Date &rhs) const;
