@@ -110,6 +110,52 @@ WeatherData WeatherApiCaller::getDateCityInfo(std::string query, Date *date) {
     return data;
 }
 
+std::vector<std::vector<std::string>> WeatherApiCaller::getCityLike(std::string name, std::string appid) {
+    std::string url = "http://api.openweathermap.org/geo/1.0/direct?q=" + name + "&limit=20&appid=" + appid;
+    std::vector<std::vector<std::string>> cityCoordinates;
+
+    try {
+        curlpp::Cleanup cleaner;
+        curlpp::Easy request;
+        request.setOpt(curlpp::options::Url(url));
+        std::stringstream responseStream;
+        request.setOpt(new curlpp::options::WriteStream(&responseStream));
+
+        request.perform();
+        long http_code;
+        curl_easy_getinfo(request.getHandle(), CURLINFO_RESPONSE_CODE, &http_code);
+        if (http_code == 200) {
+            std::string response = responseStream.str();
+
+            rapidjson::Document document;
+            document.Parse(response.c_str());
+
+            if (document.IsArray()) {
+                for (const auto& city : document.GetArray()) {
+                    std::vector<std::string> currentCity;
+                    std::string cityName = city["name"].GetString();
+                    double lat = city["lat"].GetDouble();
+                    double lon = city["lon"].GetDouble();
+                    std::string country = city["country"].GetString();
+                    std::string state = city["state"].GetString();
+                    std::string coordinates = std::to_string(lat) + ", " + std::to_string(lon);
+                    currentCity.push_back(cityName);
+                    currentCity.push_back(coordinates);
+                    currentCity.push_back(state + ", " + country);
+                    cityCoordinates.push_back(currentCity);
+                }
+            }
+        } else {
+            throw std::runtime_error("HTTP request failed with code: " + std::to_string(http_code));
+        }
+    } catch (const curlpp::LibcurlRuntimeError& e) {
+        std::cerr << "cURLpp runtime error: " << e.what() << std::endl;
+    } catch (const std::runtime_error& e) {
+        std::cerr << "Runtime error: " << e.what() << std::endl;
+    }
+
+    return cityCoordinates;
+}
 WeatherData WeatherApiCaller::getCityInfoByIp()
 {
     std::string externalIP = GetExternalIP();

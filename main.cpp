@@ -8,6 +8,8 @@
 #include <vector>
 #include <ftxui/dom/elements.hpp>
 #include <ftxui/screen/screen.hpp>
+#include <ftxui/component/component.hpp> // For components
+#include <ftxui/component/screen_interactive.hpp>
 #include <chrono>
 
 using namespace ftxui;
@@ -143,36 +145,41 @@ std::vector<Element> getWeatherCols(std::string strListFilter, WeatherData data)
     return columns;
 }
 
-void replaceLine(const string &filename, int lineNumber, const string &newLine)
-{
-    ifstream inputFile(filename);
-    vector<string> lines;
-    string line;
+void replaceLine(const std::string& key, const std::string& value) {
+    std::string path = "config.cfg";
+    std::ifstream configFileIn(path);
+    std::vector<std::string> lines;
+    bool keyFound = false;
 
-    // Read all lines from the file into a vector
-    while (getline(inputFile, line))
-    {
-        lines.push_back(line);
+    if (configFileIn.is_open()) {
+        std::string line;
+        while (getline(configFileIn, line)) {
+            std::vector<std::string> splittedLine = split(line, "=");
+            if (splittedLine.size() == 2 && splittedLine[0] == key) {
+                line = key + "=" + value;
+                keyFound = true;
+            }
+            lines.push_back(line);
+        }
+        configFileIn.close();
+
+
+        if (keyFound || !keyFound) {
+            std::ofstream configFileOut(path, std::ofstream::trunc); 
+            if (!configFileOut.is_open()) {
+                failure("Failed to open config file for writing.");
+            }
+            for (const auto& line : lines) {
+                configFileOut << line << "\n";
+            }
+            if (!keyFound) { 
+                configFileOut << key << "=" << value << "\n";
+            }
+            configFileOut.close();
+        }
+    } else {
+        failure("Missing config file. \n\t-h for help");
     }
-
-    inputFile.close();
-
-    if (lineNumber < 1 || lineNumber > lines.size())
-    {
-        cout << "Invalid line number" << endl;
-        return;
-    }
-
-    lines[lineNumber - 1] = newLine;
-
-    ofstream outputFile(filename);
-    for (const string &updatedLine : lines)
-    {
-        outputFile << updatedLine << endl;
-    }
-    outputFile.close();
-
-    cout << "Line replaced successfully" << endl;
 }
 
 int getNumberOfLines(const string &filename)
@@ -200,11 +207,12 @@ int main(int argc, char **argv)
     Date *start = new Date();
     Date *end = nullptr;
     std::string strListFilter = "tw"; // For temp and weather by default
-    bool isCitySet = true;
+    bool isCitySet = false;
 
     std::vector<std::string> cities;
     std::string city;
     std::string apiKey;
+    std::string cityApiKey;
 
     for (int i = 1; i < argc; i++)
     {
@@ -250,7 +258,6 @@ int main(int argc, char **argv)
                 exit(0);
             }
             city = argv[++i];
-            std::cout << "Your city = " << city << std::endl;
             isCitySet = true;
             continue;
         }
@@ -286,16 +293,16 @@ int main(int argc, char **argv)
                 failure("You need to put the api key after -key");
             }
             apiKey = argv[++i];
-            replaceLine("config.txt", 1, apiKey);
+            replaceLine("weatherApiKey", apiKey);
             continue;
         }
-        else if (!strcmp(argv[i], "-setcity"))
+        else if (!strcmp(argv[i], "--setcity"))
         {
             if (i + 1 < argc && argv[i + 1] && argv[i + 1][0] != '-')
             {
                 city = argv[++i];
                 std::cout << "Default city set to: " << city << std::endl;
-                replaceLine("config.txt", 2, city);
+                replaceLine("city", city);
                 continue;
             }
         }
@@ -309,42 +316,30 @@ int main(int argc, char **argv)
 
     WeatherData data;
 
-    std::fstream configFile("config.txt");
+    std::fstream configFile("config.cfg");
     if (configFile.is_open())
     {
-        if (getNumberOfLines("config.txt") != 2)
-        {
-            std::ofstream outputFile("config.txt", ios::trunc);
-            outputFile.close();
-
-            for (int i = 0; i < 2; i++)
-            {
-                configFile << "0" << endl;
-            }
-
-            failure("Do not change the config file manualy");
-        }
         std::string line;
         int currentLine = 0;
         while (std::getline(configFile, line))
         {
-            if (currentLine == 0)
+            std::vector<std::string> splitedLine = split(line, "=");
+            if (splitedLine[0] == "weatherApiKey")
             {
-                if (line == "0")
-                {
-                    failure("Missing api key. \n\t-h for help");
-                }
-                apiKey = line;
+                apiKey = splitedLine[1];
+                continue;
             }
-            else if (currentLine == 1)
+            else if (splitedLine[0] == "city" && !isCitySet)
             {
-                if (line != "0")
-                {
-                    city = line;
-                    isCitySet = true;
-                }
+                city = splitedLine[1];
+                continue;
             }
-            currentLine++;
+            else if (splitedLine[0] == "cityApiKey")
+            {
+                cityApiKey = splitedLine[1];
+
+                continue;
+            }
         }
         configFile.close();
     }
@@ -379,16 +374,56 @@ int main(int argc, char **argv)
     {
         if (isCitySet)
         {
-            data = weatherApiCaller.getCityInfo(city);
+            auto screen = ScreenInteractive::Fullscreen();
+            std::vector<std::string> items;
+            std::vector<std::vector<std::string>> citiesLike = weatherApiCaller.getCityLike(city, cityApiKey);
+
+            for (const auto &city : citiesLike)
+            {
+                items.push_back(city[0] + " " + city[2]);
+            }
+
+            int selected = 0;
+            auto menu = Menu(&items, &selected);
+
+            Component menu_component = Menu(&items, &selected);
+            menu_component = CatchEvent(menu_component, [&](Event event) -> bool
+                                        {
+                                            if (event == Event::Return)
+                                            {
+                                                screen.ExitLoopClosure()(); // Exit the loop when Enter is pressed.
+                                                return true;                // Event has been handled.
+                                            }
+                                            return false; // Event has not been handled.
+                                        });
+
+            auto renderer = Renderer(menu_component, [&]
+                                     { return vbox({
+                                           text("Select a city:"),
+                                           menu_component->Render(),
+                                       }); });
+
+            screen.Loop(renderer);
+            std::vector<std::string> cityChosen;
+
+            if (!citiesLike.empty() && selected >= 0 && selected < static_cast<int>(citiesLike.size()))
+            {
+                cityChosen = citiesLike[selected];
+            }
+            else
+            {
+                failure("No valid selection was made.");
+            }
+            data = weatherApiCaller.getCityInfo(cityChosen[1]);
         }
         else
         {
             data = weatherApiCaller.getCityInfoByIp();
         }
 
-        // Start with the basic "Ville" column
+
         std::vector<Element> columns = getWeatherCols(strListFilter, data);
-        // Now, use the dynamically constructed columns in the hbox
+
         Element document = hbox(columns);
         auto screen = Screen::Create(
             Dimension::Full(),       // Width
