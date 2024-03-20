@@ -3,7 +3,7 @@
 #include <string.h>
 #include <fstream>
 #include <stdlib.h>
-#include "src/WeatherApiCaller/WeatherApiCaller.h"
+#include "./src/WeatherApiCaller/WeatherApiCaller.hpp"
 #include "src/Date/Date.hpp"
 #include <vector>
 #include <ftxui/dom/elements.hpp>
@@ -24,9 +24,15 @@ auto print_release = []
               << COPYRIGHT << '\n';
 };
 
+auto warning = [](std::string_view message)
+{
+    std::cerr << "❌ Error: " << message << " ❌\n";
+};
+
 auto failure = [](std::string_view message)
 {
     std::cerr << "❌ Error: " << message << " ❌\n";
+    exit(-1);
 };
 
 void print_usage()
@@ -38,7 +44,6 @@ void print_usage()
               << "          -v | --version                  Version" << std::endl
               << "          -c | --city <name>              Name of the city" << std::endl
               << "          -d | --date <date>              Day that you want (Today by default)" << std::endl
-              << "          -i | --interval <date> <date>   Days that you want (Today by default)" << std::endl
               << "          -f | --filter <filter-list>     See filter usage for filter-list" << std::endl
               << std::endl
               << std::endl
@@ -104,26 +109,18 @@ std::vector<std::string> split(std::string s, std::string delimiter)
     res.push_back(s.substr(pos_start));
     return res;
 }
-std::string getStringCurrentDate()
-{
-    // Ce n'est pas ridiculement compliquer
-    //  Obtaining the current time
+
+
+std::string getStringCurrentDate() {
     auto currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-
-    // Convert the time to std::tm
-    std::tm *localTime = std::localtime(&currentTime);
-
-    // Create a stringstream to build the date string
+    std::tm* localTime = std::localtime(&currentTime);
     std::stringstream dateStream;
-
-    // Insert the date components into the stringstream
     dateStream << localTime->tm_mday << "/" << (localTime->tm_mon + 1) << "/" << (localTime->tm_year + 1900);
 
-    // Get the date string
     std::string dateString = dateStream.str();
-
     return dateString;
 }
+
 
 std::vector<Element> getWeatherCols(std::string strListFilter, WeatherData data)
 {
@@ -146,43 +143,67 @@ std::vector<Element> getWeatherCols(std::string strListFilter, WeatherData data)
     return columns;
 }
 
+
+void replaceLine(const string& filename, int lineNumber, const string& newLine) {
+    ifstream inputFile(filename);
+    vector<string> lines;
+    string line;
+
+    // Read all lines from the file into a vector
+    while (getline(inputFile, line)) {
+        lines.push_back(line);
+    }
+
+    inputFile.close();
+
+    if (lineNumber < 1 || lineNumber > lines.size()) {
+        cout << "Invalid line number" << endl;
+        return;
+    }
+
+    lines[lineNumber - 1] = newLine;
+
+    ofstream outputFile(filename);
+    for (const string& updatedLine : lines) {
+        outputFile << updatedLine << endl;
+    }
+    outputFile.close();
+
+    cout << "Line replaced successfully" << endl;
+}
+
+int getNumberOfLines(const string& filename) {
+    ifstream inputFile(filename);
+    string line;
+    int numberOfLines = 0;
+
+    while (getline(inputFile, line)) {
+        numberOfLines++;
+    }
+    inputFile.close();
+    return numberOfLines;
+}
+
+
+
 int main(int argc, char **argv)
 {
-    WeatherApiCaller weatherApiCaller("da044ffc858543249a5133512242302");
 
     std::cout << "🤗  | Welcome in \033[1m" << PROGNAME << "\033[0m | 🤗" << std::endl;
     print_release();
     std::cout << std::endl
               << std::endl;
 
-    Date *start = new Date();
+    Date* start = new Date();
     Date *end = nullptr;
     std::string strListFilter = "tw"; // For temp and weather by default
     bool isCitySet = true;
 
+
     std::vector<std::string> cities;
     std::string city;
+    std::string apiKey;
 
-    if (argc < 2)
-    {
-        std::ifstream configFile("config.txt");
-        if (configFile.is_open())
-        {
-            std::string cityChose;
-            if (std::getline(configFile, cityChose))
-            {
-                city = cityChose;
-            }
-            else
-            {
-                isCitySet = false;
-            }
-        }
-        else
-        {
-            failure("One argument required. \n\t-h for help");
-        }
-    }
 
     for (int i = 1; i < argc; i++)
     {
@@ -237,27 +258,9 @@ int main(int argc, char **argv)
             if (argv[i + 1] == NULL)
             {
                 start = new Date(split(getStringCurrentDate(), "/"));
-                // std::cout << "Date par défaut, aujourd'hui: " <<start->getStringDate()<< std::endl;
                 continue;
             }
             start = new Date(split(argv[++i], "/"));
-            continue;
-        }
-        else if (!strcmp(argv[i], "-i") || !strcmp(argv[i], "--interval"))
-        {
-            if (argv[i + 1] == NULL && argv[i + 2] == NULL)
-            {
-                start = new Date(split(getStringCurrentDate(), "/"));
-                end = new Date(split(getStringCurrentDate(), "/"));
-                exit(0);
-            }
-            if (argv[i + 1] == NULL || argv[i + 2] == NULL)
-            {
-                std::cout << "Argument invalide, veuillez préciser l'intervale souhaitée avec -i | --interval <date> <date>" << std::endl;
-                exit(0);
-            }
-            start = new Date(split(argv[++i], "/"));
-            end = new Date(split(argv[++i], "/"));
             continue;
         }
         else if (!strcmp(argv[i], "-f") || !strcmp(argv[i], "--filter"))
@@ -275,21 +278,22 @@ int main(int argc, char **argv)
             isCitySet = false;
             continue;
         }
-        if (i + 1 < argc && argv[i + 1] && argv[i + 1][0] != '-')
+        else if (!strcmp(argv[i], "-key"))
         {
-            city = argv[++i];
-            std::cout << "Default city set to: " << city << std::endl;
-            std::ofstream configFile("config.txt");
-            if (configFile.is_open())
-            {
-                configFile << city;
-                configFile.close();
+            if (argv[i+1]==NULL && argv[i + 1][0] != '-') {
+                failure("You need to put the api key after -key");
             }
-            else
-            {
-                std::cerr << "Error: Unable to open config.txt for writing." << std::endl;
-            }
+            apiKey = argv[++i];
+            replaceLine("config.txt", 1, apiKey);
             continue;
+        }
+        else if (!strcmp(argv[i], "-setcity")) {
+            if (i + 1 < argc && argv[i + 1] && argv[i + 1][0] != '-') {
+                city = argv[++i];
+                std::cout << "Default city set to: " << city << std::endl;
+                replaceLine("config.txt", 2, city);
+                continue;
+            }
         }
         else
         { // ALL OTHER ARGUMENT
@@ -298,6 +302,7 @@ int main(int argc, char **argv)
             failure(err);
         }
     }
+
     WeatherData data;
     if (!cities.empty())
     {
@@ -317,6 +322,49 @@ int main(int argc, char **argv)
         );
         Render(screen, document);
         screen.Print();
+
+    std::fstream configFile("config.txt");
+    if (configFile.is_open()) {
+        if (getNumberOfLines("config.txt") != 2){
+            std::ofstream outputFile("config.txt", ios::trunc);
+            outputFile.close();
+
+            for (int i=0; i < 2; i++) {
+                configFile << "0" << endl;
+            }
+
+            failure("Do not change the config file manualy");
+
+        }
+        std::string line;
+        int currentLine = 0;
+        while (std::getline(configFile, line)) {
+            if (currentLine == 0) {
+                if (line == "0") {
+                    failure("Missing api key. \n\t-h for help");
+                }
+                apiKey = line;
+            }
+            else if (currentLine == 1) {
+                if (line != "0") {
+                    city = line;
+                    isCitySet = true;
+                }
+            }
+            currentLine++;
+        }
+        configFile.close();
+    }
+    else
+    {
+        failure("Missing config file. \n\t-h for help");
+    }
+    WeatherApiCaller weatherApiCaller(apiKey);
+
+    WeatherData data;
+    if (isCitySet) {
+        data = weatherApiCaller.getDateCityInfo(city, start);
+
     }
     }
     else

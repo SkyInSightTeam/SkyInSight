@@ -2,7 +2,8 @@
 #include <rapidjson/document.h>
 #include <string>
 
-class WeatherData {
+class WeatherData
+{
 private:
     std::string locationName;
     std::string region;
@@ -37,15 +38,32 @@ private:
     double gustMph;
     double gustKph;
 
-public:
+    // Forecast details (assuming we're focusing on a single day's forecast)
+    std::string forecastDate;
+    double maxTempC;
+    double minTempC;
+    double maxTempF;
+    double minTempF;
+    double avgTempC;
+    double avgTempF;
+    double maxWindMph;
+    double maxWindKph;
+    double totalPrecipMm;
+    double totalPrecipIn;
+    double avgHumidity;
+    double uvIndex;
 
-    void parseJson(const std::string& jsonString) {
+public:
+    void parseJson(const std::string &jsonString)
+    {
         rapidjson::Document document;
         document.Parse(jsonString.c_str());
 
-        if (document.HasMember("location")) {
-            const auto& location = document["location"];
-            if (location.IsObject()) {
+        if (document.HasMember("location"))
+        {
+            const auto &location = document["location"];
+            if (location.IsObject())
+            {
                 locationName = location["name"].GetString();
                 region = location["region"].GetString();
                 country = location["country"].GetString();
@@ -57,9 +75,11 @@ public:
             }
         }
 
-        if (document.HasMember("current")) {
-            const auto& current = document["current"];
-            if (current.IsObject()) {
+        if (document.HasMember("current"))
+        {
+            const auto &current = document["current"];
+            if (current.IsObject())
+            {
                 currentTempC = current["temp_c"].GetDouble();
                 currentTempF = current["temp_f"].GetDouble();
                 isDay = current["is_day"].GetInt() == 1;
@@ -84,6 +104,30 @@ public:
                 gustMph = current["gust_mph"].GetDouble();
                 gustKph = current["gust_kph"].GetDouble();
             }
+        }
+        else if (document.HasMember("forecast"))
+        {
+            const auto &forecastDay = document["forecast"]["forecastday"].GetArray()[0];
+
+            forecastDate = forecastDay["date"].GetString();
+            const auto &day = forecastDay["day"];
+            maxTempC = day["maxtemp_c"].GetDouble();
+            minTempC = day["mintemp_c"].GetDouble();
+            maxTempF = day["maxtemp_f"].GetDouble();
+            minTempF = day["mintemp_f"].GetDouble();
+            currentTempC = day["avgtemp_c"].GetDouble();
+            currentTempF = day["avgtemp_f"].GetDouble();
+            maxWindMph = day["maxwind_mph"].GetDouble();
+            maxWindKph = day["maxwind_kph"].GetDouble();
+            totalPrecipMm = day["totalprecip_mm"].GetDouble();
+            totalPrecipIn = day["totalprecip_in"].GetDouble();
+            avgHumidity = day["avghumidity"].GetDouble();
+            uvIndex = day["uv"].GetDouble();
+
+            const auto &condition = day["condition"];
+            conditionText = condition["text"].GetString();
+            conditionIcon = condition["icon"].GetString();
+            conditionCode = condition["code"].GetInt();
         }
     }
 
@@ -119,5 +163,4 @@ public:
     double getUv() const { return uv; }
     double getGustMph() const { return gustMph; }
     double getGustKph() const { return gustKph; }
-
 };
