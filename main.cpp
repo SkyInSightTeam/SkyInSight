@@ -65,6 +65,32 @@ auto print_help = []()
     exit(0);
 };
 
+std::vector<std::string> parseCitiesFromJson(const std::string &jsonContent)
+{
+    rapidjson::Document doc;
+    doc.Parse(jsonContent.c_str());
+
+    std::vector<std::string> cities;
+    if (doc.HasMember("cities") && doc["cities"].IsArray())
+    {
+        const rapidjson::Value &citiesArray = doc["cities"];
+
+        for (rapidjson::SizeType i = 0; i < citiesArray.Size(); i++)
+        {
+            if (citiesArray[i].IsString())
+            {
+                cities.push_back(citiesArray[i].GetString());
+            }
+        }
+    }
+    else
+    {
+        std::cerr << "JSON does not contain 'cities' array." << std::endl;
+    }
+
+    return cities;
+}
+
 // for string delimiter
 // source: https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c
 std::vector<std::string> split(std::string s, std::string delimiter)
@@ -84,9 +110,9 @@ std::vector<std::string> split(std::string s, std::string delimiter)
     return res;
 }
 
+
 std::string getStringCurrentDate() {
     auto currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-
     std::tm* localTime = std::localtime(&currentTime);
     std::stringstream dateStream;
     dateStream << localTime->tm_mday << "/" << (localTime->tm_mon + 1) << "/" << (localTime->tm_year + 1900);
@@ -94,6 +120,29 @@ std::string getStringCurrentDate() {
     std::string dateString = dateStream.str();
     return dateString;
 }
+
+
+std::vector<Element> getWeatherCols(std::string strListFilter, WeatherData data)
+{
+    std::vector<Element> columns = {text(data.getLocationName()) | border};
+
+    for (char letter : strListFilter)
+    {
+        if (letter == 't')
+        {
+            // Add a column for temperature
+            columns.push_back(text(to_string(data.getCurrentTempC()) + "°C" + "\n") | border | flex);
+        }
+        // Check if the letter corresponds to weather
+        else if (letter == 'w')
+        {
+            // Add a column for weather
+            columns.push_back(text(data.getConditionText()) | border | flex);
+        }
+    }
+    return columns;
+}
+
 
 void replaceLine(const string& filename, int lineNumber, const string& newLine) {
     ifstream inputFile(filename);
@@ -136,6 +185,7 @@ int getNumberOfLines(const string& filename) {
 }
 
 
+
 int main(int argc, char **argv)
 {
 
@@ -146,10 +196,11 @@ int main(int argc, char **argv)
 
     Date* start = new Date();
     Date *end = nullptr;
-    std::string strListFilter = "tw";
-    bool isCitySet = false;
+    std::string strListFilter = "tw"; // For temp and weather by default
+    bool isCitySet = true;
 
 
+    std::vector<std::string> cities;
     std::string city;
     std::string apiKey;
 
@@ -166,10 +217,35 @@ int main(int argc, char **argv)
             print_release();
             exit(0);
         }
+        else if (!strcmp(argv[i], "-C") || !strcmp(argv[i], "--Cities"))
+        {
+            if (argv[i + 1] == NULL)
+            {
+                std::cout << "Invalid argument" << std::endl;
+                print_usage();
+                exit(0);
+            }
+
+            std::string citiesConfig = argv[++i];
+
+            std::ifstream file(citiesConfig);
+            if (!file.is_open())
+            {
+                failure("Failed to open file: " + citiesConfig);
+                exit(-1);
+            }
+
+            std::stringstream buffer;
+            buffer << file.rdbuf();
+            cities = parseCitiesFromJson(buffer.str());
+            continue;
+        }
         else if (!strcmp(argv[i], "-c") || !strcmp(argv[i], "--city"))
         {
-            if (argv[i+1]==NULL){
-                std::cout << "Argument invalide, veuillez préciser la ville souhaitée avec -c | --city <nom>" << std::endl;
+            if (argv[i + 1] == NULL)
+            {
+                std::cout << "Invalid argument" << std::endl;
+                print_usage();
                 exit(0);
             }
             city = argv[++i];
@@ -179,7 +255,8 @@ int main(int argc, char **argv)
         }
         else if (!strcmp(argv[i], "-d") || !strcmp(argv[i], "--date"))
         {
-            if (argv[i+1]==NULL){
+            if (argv[i + 1] == NULL)
+            {
                 start = new Date(split(getStringCurrentDate(), "/"));
                 continue;
             }
@@ -188,7 +265,8 @@ int main(int argc, char **argv)
         }
         else if (!strcmp(argv[i], "-f") || !strcmp(argv[i], "--filter"))
         {
-            if (argv[i+1]==NULL){
+            if (argv[i + 1] == NULL)
+            {
                 std::cout << "Argument invalide, veuillez préciser un filtre avec --filter <filter-list>" << std::endl;
                 exit(0);
             }
@@ -224,6 +302,26 @@ int main(int argc, char **argv)
             failure(err);
         }
     }
+
+    WeatherData data;
+    if (!cities.empty())
+    {
+        std::vector<Element> rows;
+        for (std::string city : cities)
+        {
+            WeatherData data = weatherApiCaller.getCityInfo(city);
+            std::vector<Element> columns = getWeatherCols(strListFilter, data);
+            rows.push_back(hbox(columns));
+        }
+        if (!rows.empty()) {
+        Element document = vbox(vbox(std::move(rows))| border);
+
+        auto screen = Screen::Create(
+            Dimension::Full(),       // Width
+            Dimension::Fit(document) // Height
+        );
+        Render(screen, document);
+        screen.Print();
 
     std::fstream configFile("config.txt");
     if (configFile.is_open()) {
@@ -266,36 +364,30 @@ int main(int argc, char **argv)
     WeatherData data;
     if (isCitySet) {
         data = weatherApiCaller.getDateCityInfo(city, start);
-    }
-    else {
-        data = weatherApiCaller.getCityInfoByIp();
-    }
 
-    // Start with the basic "Ville" column
-    std::vector<Element> columns = {text(data.getLocationName()) | border};
-
-    // Iterate over each character in strListFilter
-    for (char letter : strListFilter) {
-        // Check if the letter corresponds to temperature
-        if (letter == 't') {
-            // Add a column for temperature
-            columns.push_back(text(to_string(data.getCurrentTempC()) + "°C" + "\n") | border | flex);
+    }
+    }
+    else
+    {
+        if (isCitySet)
+        {
+            data = weatherApiCaller.getCityInfo(city);
         }
-        // Check if the letter corresponds to weather
-        else if (letter == 'w') {
-            // Add a column for weather
-            columns.push_back(text(data.getConditionText()) | border | flex);
+        else
+        {
+            data = weatherApiCaller.getCityInfoByIp();
         }
+
+        // Start with the basic "Ville" column
+        std::vector<Element> columns = getWeatherCols(strListFilter, data);
+        // Now, use the dynamically constructed columns in the hbox
+        Element document = hbox(columns);
+        auto screen = Screen::Create(
+            Dimension::Full(),       // Width
+            Dimension::Fit(document) // Height
+        );
+        Render(screen, document);
+        screen.Print();
     }
-
-    // Now, use the dynamically constructed columns in the hbox
-    Element document = hbox(columns);
-    auto screen = Screen::Create(
-        Dimension::Full(),       // Width
-        Dimension::Fit(document) // Height
-    );
-    Render(screen, document);
-    screen.Print();
-
     return EXIT_SUCCESS;
 }
