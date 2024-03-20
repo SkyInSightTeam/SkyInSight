@@ -38,7 +38,6 @@ void print_usage()
               << "          -v | --version                  Version" << std::endl
               << "          -c | --city <name>              Name of the city" << std::endl
               << "          -d | --date <date>              Day that you want (Today by default)" << std::endl
-              << "          -i | --interval <date> <date>   Days that you want (Today by default)" << std::endl
               << "          -f | --filter <filter-list>     See filter usage for filter-list" << std::endl
               << std::endl
               << std::endl
@@ -78,6 +77,7 @@ std::vector<std::string> split(std::string s, std::string delimiter)
     res.push_back(s.substr(pos_start));
     return res;
 }
+
 std::string getStringCurrentDate() {
     auto currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
@@ -157,21 +157,6 @@ int main(int argc, char **argv)
                 continue;
             }
             start = new Date(split(argv[++i], "/"));
-            continue;
-        }
-        else if (!strcmp(argv[i], "-i") || !strcmp(argv[i], "--interval"))
-        {
-            if (argv[i+1]==NULL&&argv[i+2]==NULL){
-                start = new Date(split(getStringCurrentDate(), "/"));
-                end= new Date(split(getStringCurrentDate(), "/"));
-                exit(0);
-            }
-            if (argv[i+1]==NULL||argv[i+2]==NULL){
-                std::cout << "Argument invalide, veuillez préciser l'intervale souhaitée avec -i | --interval <date> <date>" << std::endl;
-                exit(0);
-            }
-            start = new Date(split(argv[++i], "/"));
-            end = new Date(split(argv[++i], "/"));
             continue;
         }
         else if (!strcmp(argv[i], "-f") || !strcmp(argv[i], "--filter"))
