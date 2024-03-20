@@ -145,36 +145,41 @@ std::vector<Element> getWeatherCols(std::string strListFilter, WeatherData data)
     return columns;
 }
 
-void replaceLine(const string &filename, int lineNumber, const string &newLine)
-{
-    ifstream inputFile(filename);
-    vector<string> lines;
-    string line;
+void replaceLine(const std::string& key, const std::string& value) {
+    std::string path = "config.cfg";
+    std::ifstream configFileIn(path);
+    std::vector<std::string> lines;
+    bool keyFound = false;
 
-    // Read all lines from the file into a vector
-    while (getline(inputFile, line))
-    {
-        lines.push_back(line);
+    if (configFileIn.is_open()) {
+        std::string line;
+        while (getline(configFileIn, line)) {
+            std::vector<std::string> splittedLine = split(line, "=");
+            if (splittedLine.size() == 2 && splittedLine[0] == key) {
+                line = key + "=" + value;
+                keyFound = true;
+            }
+            lines.push_back(line);
+        }
+        configFileIn.close();
+
+
+        if (keyFound || !keyFound) {
+            std::ofstream configFileOut(path, std::ofstream::trunc); 
+            if (!configFileOut.is_open()) {
+                failure("Failed to open config file for writing.");
+            }
+            for (const auto& line : lines) {
+                configFileOut << line << "\n";
+            }
+            if (!keyFound) { 
+                configFileOut << key << "=" << value << "\n";
+            }
+            configFileOut.close();
+        }
+    } else {
+        failure("Missing config file. \n\t-h for help");
     }
-
-    inputFile.close();
-
-    if (lineNumber < 1 || lineNumber > lines.size())
-    {
-        cout << "Invalid line number" << endl;
-        return;
-    }
-
-    lines[lineNumber - 1] = newLine;
-
-    ofstream outputFile(filename);
-    for (const string &updatedLine : lines)
-    {
-        outputFile << updatedLine << endl;
-    }
-    outputFile.close();
-
-    cout << "Line replaced successfully" << endl;
 }
 
 int getNumberOfLines(const string &filename)
@@ -288,16 +293,16 @@ int main(int argc, char **argv)
                 failure("You need to put the api key after -key");
             }
             apiKey = argv[++i];
-            replaceLine("config.cfg", 1, apiKey);
+            replaceLine("weatherApiKey", apiKey);
             continue;
         }
-        else if (!strcmp(argv[i], "-setcity"))
+        else if (!strcmp(argv[i], "--setcity"))
         {
             if (i + 1 < argc && argv[i + 1] && argv[i + 1][0] != '-')
             {
                 city = argv[++i];
                 std::cout << "Default city set to: " << city << std::endl;
-                replaceLine("config.cfg", 2, city);
+                replaceLine("city", city);
                 continue;
             }
         }
