@@ -28,6 +28,7 @@ all: compiler
 install:
 	$(PRINT) "\n$(COLOR)--------| $(COLOR)[1;32mINSTALLING FTXUI$(COLOR)[0m$(COLOR)[32m |--------$(COLOR)[0m\n\n"
 	git clone https://github.com/ArthurSonzogni/FTXUI.git
+	sudo apt-get install curl
 	cd FTXUI && mkdir build && cd build && cmake .. && make && sudo make install
 	$(PRINT) "$(COLOR)[32m\tDONE$(COLOR)[0m\n"
 

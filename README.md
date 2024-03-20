@@ -24,7 +24,6 @@ To install SkyInSight, follow these steps:
 
    ```bash
    cd SkyInSight
-   git clone https://github.com/ArthurSonzogni/FTXUI.git
    sudo make install
    ```
 
