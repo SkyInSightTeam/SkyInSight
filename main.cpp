@@ -205,6 +205,7 @@ int main(int argc, char **argv)
     std::vector<std::string> cities;
     std::string city;
     std::string apiKey;
+    std::string cityApiKey;
 
     for (int i = 1; i < argc; i++)
     {
@@ -286,7 +287,7 @@ int main(int argc, char **argv)
                 failure("You need to put the api key after -key");
             }
             apiKey = argv[++i];
-            replaceLine("config.txt", 1, apiKey);
+            replaceLine("config.cfg", 1, apiKey);
             continue;
         }
         else if (!strcmp(argv[i], "-setcity"))
@@ -295,7 +296,7 @@ int main(int argc, char **argv)
             {
                 city = argv[++i];
                 std::cout << "Default city set to: " << city << std::endl;
-                replaceLine("config.txt", 2, city);
+                replaceLine("config.cfg", 2, city);
                 continue;
             }
         }
@@ -309,42 +310,24 @@ int main(int argc, char **argv)
 
     WeatherData data;
 
-    std::fstream configFile("config.txt");
+    std::fstream configFile("config.cfg");
     if (configFile.is_open())
     {
-        if (getNumberOfLines("config.txt") != 2)
-        {
-            std::ofstream outputFile("config.txt", ios::trunc);
-            outputFile.close();
-
-            for (int i = 0; i < 2; i++)
-            {
-                configFile << "0" << endl;
-            }
-
-            failure("Do not change the config file manualy");
-        }
         std::string line;
         int currentLine = 0;
         while (std::getline(configFile, line))
         {
-            if (currentLine == 0)
-            {
-                if (line == "0")
-                {
-                    failure("Missing api key. \n\t-h for help");
-                }
-                apiKey = line;
+            std::vector<std::string>  splitedLine = split(line, "=");
+            if(splitedLine[0] == "weatherApiKey"){
+                apiKey = splitedLine[1];
+                continue;
+            } else if(splitedLine[0] == "city") {
+                city = splitedLine[1];
+                continue;
+            } else if(splitedLine[0] == "cityApiKey") {
+                cityApiKey = splitedLine[1];
+                continue;
             }
-            else if (currentLine == 1)
-            {
-                if (line != "0")
-                {
-                    city = line;
-                    isCitySet = true;
-                }
-            }
-            currentLine++;
         }
         configFile.close();
     }
