@@ -20,12 +20,14 @@ class WeatherApiCaller
 private:
     string apiKey;
     static std::string BASE_URL;
+
 public:
     WeatherApiCaller(string apiKey);
-    WeatherData getDateCityInfo(std::string querry, Date* date);
+    WeatherData getDateCityInfo(std::string querry, Date *date);
     string getApiKey();
     WeatherData getCityInfo(string querry);
     WeatherData getCityInfoByIp();
+    std::vector<std::vector<std::string>> getCityLike(std::string name, std::string appid);
 };
 
 #endif // SKYINSIGHT_WEATHERAPICALLER_H

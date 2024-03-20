@@ -8,6 +8,8 @@
 #include <vector>
 #include <ftxui/dom/elements.hpp>
 #include <ftxui/screen/screen.hpp>
+#include <ftxui/component/component.hpp> // For components
+#include <ftxui/component/screen_interactive.hpp>
 #include <chrono>
 
 using namespace ftxui;
@@ -200,7 +202,7 @@ int main(int argc, char **argv)
     Date *start = new Date();
     Date *end = nullptr;
     std::string strListFilter = "tw"; // For temp and weather by default
-    bool isCitySet = true;
+    bool isCitySet = false;
 
     std::vector<std::string> cities;
     std::string city;
@@ -251,7 +253,6 @@ int main(int argc, char **argv)
                 exit(0);
             }
             city = argv[++i];
-            std::cout << "Your city = " << city << std::endl;
             isCitySet = true;
             continue;
         }
@@ -317,15 +318,21 @@ int main(int argc, char **argv)
         int currentLine = 0;
         while (std::getline(configFile, line))
         {
-            std::vector<std::string>  splitedLine = split(line, "=");
-            if(splitedLine[0] == "weatherApiKey"){
+            std::vector<std::string> splitedLine = split(line, "=");
+            if (splitedLine[0] == "weatherApiKey")
+            {
                 apiKey = splitedLine[1];
                 continue;
-            } else if(splitedLine[0] == "city") {
+            }
+            else if (splitedLine[0] == "city" && !isCitySet)
+            {
                 city = splitedLine[1];
                 continue;
-            } else if(splitedLine[0] == "cityApiKey") {
+            }
+            else if (splitedLine[0] == "cityApiKey")
+            {
                 cityApiKey = splitedLine[1];
+
                 continue;
             }
         }
@@ -362,16 +369,56 @@ int main(int argc, char **argv)
     {
         if (isCitySet)
         {
-            data = weatherApiCaller.getCityInfo(city);
+            auto screen = ScreenInteractive::Fullscreen();
+            std::vector<std::string> items;
+            std::vector<std::vector<std::string>> citiesLike = weatherApiCaller.getCityLike(city, cityApiKey);
+
+            for (const auto &city : citiesLike)
+            {
+                items.push_back(city[0] + " " + city[2]);
+            }
+
+            int selected = 0;
+            auto menu = Menu(&items, &selected);
+
+            Component menu_component = Menu(&items, &selected);
+            menu_component = CatchEvent(menu_component, [&](Event event) -> bool
+                                        {
+                                            if (event == Event::Return)
+                                            {
+                                                screen.ExitLoopClosure()(); // Exit the loop when Enter is pressed.
+                                                return true;                // Event has been handled.
+                                            }
+                                            return false; // Event has not been handled.
+                                        });
+
+            auto renderer = Renderer(menu_component, [&]
+                                     { return vbox({
+                                           text("Select a city:"),
+                                           menu_component->Render(),
+                                       }); });
+
+            screen.Loop(renderer);
+            std::vector<std::string> cityChosen;
+
+            if (!citiesLike.empty() && selected >= 0 && selected < static_cast<int>(citiesLike.size()))
+            {
+                cityChosen = citiesLike[selected];
+            }
+            else
+            {
+                failure("No valid selection was made.");
+            }
+            data = weatherApiCaller.getCityInfo(cityChosen[1]);
         }
         else
         {
             data = weatherApiCaller.getCityInfoByIp();
         }
 
-        // Start with the basic "Ville" column
+
         std::vector<Element> columns = getWeatherCols(strListFilter, data);
-        // Now, use the dynamically constructed columns in the hbox
+
         Element document = hbox(columns);
         auto screen = Screen::Create(
             Dimension::Full(),       // Width
